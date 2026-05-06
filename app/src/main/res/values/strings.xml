@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CampusX</string>
+    <string name="app_name">Campus Find</string>
     <string name="app_logo">App Logo</string>
     <string name="tagline">Campus Rental Marketplace</string>
     
@@ -16,28 +16,63 @@
     <string name="onboarding_desc_3">Secure bookings with OTP verification and easy pickup coordination</string>
     
     <!-- Authentication -->
-    <string name="campus_verification">Campus Verification</string>
-    <string name="enter_campus_email">Enter your campus email</string>
-    <string name="email_hint">your.email@bml.edu.in</string>
-    <string name="get_security_code">Get Security Code</string>
-    <string name="otp_verification">OTP Verification</string>
-    <string name="enter_otp">Enter the 6-digit code sent to</string>
+    <string name="campus_verification">Sign in</string>
+    <string name="enter_campus_email">Use your email and password to continue</string>
+    <string name="sign_in">Sign in</string>
+    <string name="create_account">Create account</string>
+    <string name="auth_market_badge">CampusX</string>
+    <string name="auth_hero_title">Rent. Buy. Meet on campus.</string>
+    <string name="auth_hero_subtitle">A clean marketplace for trusted student handoffs.</string>
+    <string name="signin_subtitle">Access your marketplace account.</string>
+    <string name="signup_subtitle">Create your account and start trading around campus.</string>
+    <string name="email_hint">Email address</string>
+    <string name="password_hint">Password</string>
+    <string name="switch_to_signup">New here? Create an account</string>
+    <string name="switch_to_signin">Already have an account? Sign in</string>
+    <string name="auth_note">Firebase email/password auth. No OTP, no wallet, no extra steps.</string>
+    <string name="get_security_code">Continue</string>
+    <string name="default_user_name">CampusX user</string>
+    <string name="default_user_bio">CampusX member</string>
+    <string name="error_email_required">Please enter your email address.</string>
+    <string name="error_email_invalid">Please enter a valid email address.</string>
+    <string name="error_password_required">Please enter your password.</string>
+    <string name="error_password_short">Password must be at least 6 characters.</string>
+    <string name="error_auth_failed">Authentication failed. Please try again.</string>
+    <string name="error_signup_failed">Sign up failed: %1$s</string>
+    <string name="error_signin_failed">Sign in failed: %1$s</string>
+    <string name="error_profile_create_failed">Account was created, but the Firebase users table write failed: %1$s</string>
+    <string name="error_try_again">Please try again.</string>
+    <string name="otp_verification">Enter PIN</string>
+    <string name="enter_otp">Enter the 4-digit PIN for</string>
+    <string name="demo_pin_format">Demo PIN: %1$s</string>
     <string name="verify">Verify</string>
-    <string name="resend_code">Resend Code</string>
+    <string name="resend_code">Show PIN again</string>
     <string name="resend_in">Resend in %1$s</string>
     
     <!-- Feed -->
-    <string name="feed">Feed</string>
+    <string name="feed">Home</string>
     <string name="search">Search</string>
-    <string name="list">List</string>
-    <string name="rentals">Rentals</string>
+    <string name="list">Sell</string>
+    <string name="rentals">Bookings</string>
     <string name="profile">Profile</string>
+    <string name="market_title">Campus Find</string>
+    <string name="market_kicker">Campus marketplace</string>
+    <string name="market_headline">Rent. Buy. Pick up on campus.</string>
+    <string name="search_market">Search items around campus</string>
+    <string name="rent_badge">Rent</string>
+    <string name="buy_badge">Buy</string>
+    <string name="nearby_label">Nearby pickup</string>
+    <string name="trending_now">Latest listings</string>
+    <string name="campus_verified">Verified</string>
+    <string name="fast_pickup">Nearby</string>
+    <string name="secure_handoffs">PIN pickup</string>
     <string name="all_items">All Items</string>
     <string name="electronics">Electronics</string>
     <string name="study_gear">Study Gear</string>
     <string name="lifestyle">Lifestyle</string>
     <string name="per_day">₹%1$.0f/day</string>
-    <string name="rating_format">%.1f (%d)</string>
+    <string name="rating_format">%1$.1f (%2$d)</string>
+    <string name="no_items_found">No items found</string>
     
     <!-- Search -->
     <string name="search_items">Search items…</string>
@@ -60,6 +95,12 @@
     <string name="booking_details">Booking Details</string>
     <string name="call_owner">Call Owner</string>
     <string name="view_details">View Details</string>
+    <string name="booking_sent_title">Request sent</string>
+    <string name="booking_sent_subtitle">The owner can accept it from their bookings page.</string>
+    <string name="pickup_pin">Pickup PIN</string>
+    <string name="pickup_pin_hint">Show this during handoff after the owner confirms.</string>
+    <string name="awaiting_approval">Awaiting owner approval</string>
+    <string name="done">Done</string>
     
     <!-- Lister Hub -->
     <string name="lister_hub">Lister Hub</string>
@@ -73,6 +114,8 @@
     
     <!-- New Listing -->
     <string name="new_listing">New Listing</string>
+    <string name="create_listing">Create listing</string>
+    <string name="create_listing_subtitle">Add an item students can rent or buy around campus.</string>
     <string name="edit_listing">Edit Listing</string>
     <string name="add_photos">Add Photos</string>
     <string name="item_title">Item Title</string>
@@ -80,11 +123,24 @@
     <string name="category">Category</string>
     <string name="price_per_day">Price per Day (₹)</string>
     <string name="pickup_location_hint">Pickup Location</string>
+    <string name="image_url_optional">Image URL (optional)</string>
     <string name="publish">Publish</string>
     <string name="save_changes">Save Changes</string>
     
     <!-- My Rentals -->
-    <string name="my_rentals">My Rentals</string>
+    <string name="my_rentals">Bookings</string>
+    <string name="history">History</string>
+    <string name="booking_requests">Requests</string>
+    <string name="booking_history">History</string>
+    <string name="activity_subtitle">Accept incoming requests and track everything you buy, rent, and sell.</string>
+    <string name="activity_empty">No Firebase bookings here yet.</string>
+    <string name="no_pending_requests">No pending booking requests.</string>
+    <string name="sign_in_for_bookings">Sign in to see your bookings.</string>
+    <string name="booking_role_buying">Buying</string>
+    <string name="booking_role_selling">Selling</string>
+    <string name="booking_renter_format">Renter: %1$s</string>
+    <string name="booking_seller_format">Seller: %1$s</string>
+    <string name="accept">Accept</string>
     <string name="ongoing">Ongoing</string>
     <string name="completed">Completed</string>
     <string name="cancelled">Cancelled</string>
@@ -99,8 +155,10 @@
     <string name="email">Email</string>
     <string name="bio">Bio</string>
     <string name="listings">Listings</string>
-    <string name="rentals_count">Rentals</string>
+    <string name="rentals_count">History</string>
     <string name="logout">Logout</string>
+    <string name="profile_signed_in">Signed in. Profile, listings, and bookings are reading from Firebase.</string>
+    <string name="profile_signed_out">Sign in to sync your profile, listings, and bookings.</string>
     
     <!-- Admin -->
     <string name="admin_portal">Admin Portal</string>

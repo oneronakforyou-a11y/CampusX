@@ -5,13 +5,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.bumptech.glide.Glide;
 import com.example.campusx.R;
 import com.example.campusx.data.FirebaseRepository;
 import com.example.campusx.data.MockDataRepository;
@@ -19,6 +24,7 @@ import com.example.campusx.model.Booking;
 import com.example.campusx.model.BookingStatus;
 import com.example.campusx.model.Item;
 import com.example.campusx.model.ItemCategory;
+import com.example.campusx.ui.SystemBarsHelper;
 import com.example.campusx.ui.booking.BookingConfirmationActivity;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -27,6 +33,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -55,6 +62,7 @@ public class ItemDetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_detail);
+        SystemBarsHelper.applySystemBarPadding(findViewById(R.id.item_detail_root));
 
         firebaseRepo = FirebaseRepository.getInstance();
         mockRepo = MockDataRepository.getInstance();
@@ -187,12 +195,14 @@ public class ItemDetailActivity extends AppCompatActivity {
         itemPrice.setText(getString(R.string.per_day, item.getPricePerDay()));
         itemDescription.setText(item.getDescription());
         ownerName.setText(item.getOwnerName());
-        ownerRating.setText(String.format("%.1f (%d)", item.getOwnerRating(), 
+        ownerRating.setText(String.format(Locale.getDefault(), "%.1f (%d)", item.getOwnerRating(),
                 (int)(item.getOwnerRating() * 2)));
         pickupLocation.setText(item.getPickupLocation());
 
-        // Setup image carousel (simplified - using first image only for now)
-        // In production, implement proper ViewPager2 adapter for multiple images
+        List<String> images = item.getImages() != null && !item.getImages().isEmpty()
+                ? item.getImages()
+                : Collections.singletonList("");
+        imageViewPager.setAdapter(new ImagePagerAdapter(images));
     }
 
     private void setupDatePickers() {
@@ -267,7 +277,7 @@ public class ItemDetailActivity extends AppCompatActivity {
 
     private void createBooking() {
         // Generate OTP
-        String otp = String.format("%06d", new Random().nextInt(999999));
+        String otp = String.format(Locale.getDefault(), "%06d", new Random().nextInt(999999));
         
         // Calculate total price
         long diffInMillis = endDate.getTimeInMillis() - startDate.getTimeInMillis();
@@ -281,13 +291,17 @@ public class ItemDetailActivity extends AppCompatActivity {
         }
         
         String currentUserName = mockRepo.getCurrentUser().getName();
+        if (firebaseRepo.getCurrentFirebaseUser() != null && firebaseRepo.getCurrentFirebaseUser().getEmail() != null) {
+            String email = firebaseRepo.getCurrentFirebaseUser().getEmail();
+            currentUserName = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
+        }
 
         // Create booking
         Booking booking = new Booking(
                 UUID.randomUUID().toString(),
                 item.getId(),
                 item.getTitle(),
-                item.getImages().get(0),
+                getFirstImageUrl(),
                 currentUserId,
                 currentUserName,
                 item.getOwnerId(),
@@ -329,5 +343,59 @@ public class ItemDetailActivity extends AppCompatActivity {
         intent.putExtra(BookingConfirmationActivity.EXTRA_BOOKING_ID, bookingId);
         startActivity(intent);
         finish();
+    }
+
+    private String getFirstImageUrl() {
+        if (item.getImages() != null && !item.getImages().isEmpty()) {
+            return item.getImages().get(0);
+        }
+        return "";
+    }
+
+    private static class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.ImageViewHolder> {
+        private final List<String> imageUrls;
+
+        ImagePagerAdapter(List<String> imageUrls) {
+            this.imageUrls = imageUrls;
+        }
+
+        @NonNull
+        @Override
+        public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            ImageView imageView = new ImageView(parent.getContext());
+            imageView.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+            ));
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            return new ImageViewHolder(imageView);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
+            String url = imageUrls.get(position);
+            if (url == null || url.isEmpty()) {
+                holder.imageView.setImageResource(R.drawable.ic_launcher_background);
+            } else {
+                Glide.with(holder.imageView.getContext())
+                        .load(url)
+                        .placeholder(R.drawable.ic_launcher_background)
+                        .into(holder.imageView);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return imageUrls.size();
+        }
+
+        static class ImageViewHolder extends RecyclerView.ViewHolder {
+            private final ImageView imageView;
+
+            ImageViewHolder(@NonNull ImageView imageView) {
+                super(imageView);
+                this.imageView = imageView;
+            }
+        }
     }
 }

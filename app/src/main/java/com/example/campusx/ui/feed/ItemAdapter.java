@@ -15,6 +15,7 @@ import com.example.campusx.model.Item;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
     private List<Item> items = new ArrayList<>();
@@ -58,6 +59,9 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         private TextView itemPrice;
         private TextView ownerName;
         private TextView ratingText;
+        private TextView itemLocation;
+        private TextView listingMode;
+        private TextView buyBadge;
 
         public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -66,13 +70,19 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
             itemPrice = itemView.findViewById(R.id.item_price);
             ownerName = itemView.findViewById(R.id.owner_name);
             ratingText = itemView.findViewById(R.id.rating_text);
+            itemLocation = itemView.findViewById(R.id.item_location);
+            listingMode = itemView.findViewById(R.id.listing_mode);
+            buyBadge = itemView.findViewById(R.id.buy_badge);
         }
 
         public void bind(Item item, OnItemClickListener listener) {
             itemTitle.setText(item.getTitle());
             itemPrice.setText(itemView.getContext().getString(R.string.per_day, item.getPricePerDay()));
-            ownerName.setText(item.getOwnerName());
-            ratingText.setText(String.format("%.1f", item.getOwnerRating()));
+            ownerName.setText("Listed by " + item.getOwnerName());
+            ratingText.setText(String.format(Locale.getDefault(), "%.1f", item.getOwnerRating()));
+            itemLocation.setText(itemView.getContext().getString(R.string.nearby_label) + " · " + item.getPickupLocation());
+            listingMode.setText(R.string.rent_badge);
+            buyBadge.setVisibility(View.VISIBLE);
 
             // Load image with Glide
             if (item.getImages() != null && !item.getImages().isEmpty()) {
@@ -80,6 +90,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
                         .load(item.getImages().get(0))
                         .placeholder(R.drawable.ic_launcher_background)
                         .into(itemImage);
+            } else {
+                itemImage.setImageResource(R.drawable.ic_launcher_background);
             }
 
             itemView.setOnClickListener(v -> {

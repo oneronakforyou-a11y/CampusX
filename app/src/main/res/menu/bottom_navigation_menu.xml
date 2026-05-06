@@ -2,26 +2,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_feed"
-        android:icon="@android:drawable/ic_menu_view"
-        android:title="@string/feed" />
-    
+        android:icon="@drawable/ic_home_simple"
+        android:title="Home" />
+
     <item
         android:id="@+id/nav_search"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="@string/search" />
-    
-    <item
-        android:id="@+id/nav_list"
-        android:icon="@android:drawable/ic_menu_add"
-        android:title="@string/list" />
-    
+        android:icon="@drawable/ic_search_simple"
+        android:title="Search" />
+
     <item
         android:id="@+id/nav_rentals"
-        android:icon="@android:drawable/ic_menu_my_calendar"
-        android:title="@string/rentals" />
-    
+        android:icon="@drawable/ic_bookings_simple"
+        android:title="Bookings" />
+
     <item
         android:id="@+id/nav_profile"
-        android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="@string/profile" />
+        android:icon="@drawable/ic_profile_simple"
+        android:title="Profile" />
 </menu>

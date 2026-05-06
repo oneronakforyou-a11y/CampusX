@@ -9,6 +9,7 @@ import com.example.campusx.model.BookingStatus;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class MockDataRepository {
     private static MockDataRepository instance;
@@ -102,14 +103,29 @@ public class MockDataRepository {
 
     public List<Item> searchItems(String query) {
         List<Item> results = new ArrayList<>();
-        String lowerQuery = query.toLowerCase();
+        String lowerQuery = query.toLowerCase(Locale.ROOT);
         for (Item item : items) {
-            if (item.getTitle().toLowerCase().contains(lowerQuery) ||
-                item.getDescription().toLowerCase().contains(lowerQuery)) {
+            if (item.getTitle().toLowerCase(Locale.ROOT).contains(lowerQuery) ||
+                item.getDescription().toLowerCase(Locale.ROOT).contains(lowerQuery) ||
+                item.getPickupLocation().toLowerCase(Locale.ROOT).contains(lowerQuery)) {
                 results.add(item);
             }
         }
         return results;
+    }
+
+    public void addItem(Item item) {
+        items.add(0, item);
+    }
+
+    public List<Item> getItemsByOwnerId(String ownerId) {
+        List<Item> ownedItems = new ArrayList<>();
+        for (Item item : items) {
+            if (item.getOwnerId().equals(ownerId)) {
+                ownedItems.add(item);
+            }
+        }
+        return ownedItems;
     }
 
     public User getCurrentUser() {

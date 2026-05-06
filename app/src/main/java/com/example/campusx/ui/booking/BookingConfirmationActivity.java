@@ -7,6 +7,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.campusx.R;
@@ -14,6 +15,7 @@ import com.example.campusx.data.FirebaseRepository;
 import com.example.campusx.data.MockDataRepository;
 import com.example.campusx.model.Booking;
 import com.example.campusx.model.BookingStatus;
+import com.example.campusx.ui.SystemBarsHelper;
 import com.example.campusx.ui.main.MainActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -37,9 +39,11 @@ public class BookingConfirmationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_booking_confirmation);
+        SystemBarsHelper.applySystemBarPadding(findViewById(R.id.booking_confirmation_root));
 
         firebaseRepo = FirebaseRepository.getInstance();
         mockRepo = MockDataRepository.getInstance();
+        setupBackNavigation();
 
         String bookingId = getIntent().getStringExtra(EXTRA_BOOKING_ID);
         if (bookingId == null) {
@@ -170,25 +174,26 @@ public class BookingConfirmationActivity extends AppCompatActivity {
 
     private void setupButtons() {
         viewRentalsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("navigate_to", "rentals");
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-            finish();
+            navigateToMain("rentals");
         });
 
-        doneButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-            finish();
+        doneButton.setOnClickListener(v -> navigateToMain(null));
+    }
+
+    private void setupBackNavigation() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateToMain(null);
+            }
         });
     }
 
-    @Override
-    public void onBackPressed() {
-        // Prevent back navigation, force user to use buttons
+    private void navigateToMain(String targetTab) {
         Intent intent = new Intent(this, MainActivity.class);
+        if (targetTab != null) {
+            intent.putExtra("navigate_to", targetTab);
+        }
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();

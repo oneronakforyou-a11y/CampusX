@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.campusx.R;
+import com.example.campusx.ui.SystemBarsHelper;
 import com.example.campusx.ui.auth.CampusVerificationActivity;
 import com.google.android.material.button.MaterialButton;
 
@@ -27,6 +28,7 @@ public class OnboardingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_onboarding);
+        SystemBarsHelper.applySystemBarPadding(findViewById(R.id.onboarding_root));
 
         // Hide action bar
         if (getSupportActionBar() != null) {
@@ -51,17 +53,17 @@ public class OnboardingActivity extends AppCompatActivity {
     private void setupPages() {
         pages = new ArrayList<>();
         pages.add(new OnboardingPage(
-                R.drawable.ic_launcher_foreground,
+                R.drawable.ic_campusx_logo,
                 getString(R.string.onboarding_title_1),
                 getString(R.string.onboarding_desc_1)
         ));
         pages.add(new OnboardingPage(
-                R.drawable.ic_launcher_foreground,
+                R.drawable.ic_campusx_logo,
                 getString(R.string.onboarding_title_2),
                 getString(R.string.onboarding_desc_2)
         ));
         pages.add(new OnboardingPage(
-                R.drawable.ic_launcher_foreground,
+                R.drawable.ic_campusx_logo,
                 getString(R.string.onboarding_title_3),
                 getString(R.string.onboarding_desc_3)
         ));

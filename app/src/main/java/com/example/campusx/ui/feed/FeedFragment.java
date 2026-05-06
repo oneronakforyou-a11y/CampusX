@@ -21,6 +21,7 @@ import com.example.campusx.data.FirebaseRepository;
 import com.example.campusx.data.MockDataRepository;
 import com.example.campusx.model.Item;
 import com.example.campusx.model.ItemCategory;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.chip.ChipGroup;
 import com.google.firebase.firestore.DocumentSnapshot;
 
@@ -33,6 +34,7 @@ public class FeedFragment extends Fragment {
     private RecyclerView recyclerView;
     private ItemAdapter adapter;
     private ChipGroup categoryChipGroup;
+    private View searchPill;
     private ProgressBar progressBar;
     private TextView emptyText;
     private FirebaseRepository firebaseRepo;
@@ -50,6 +52,7 @@ public class FeedFragment extends Fragment {
         
         initViews(view);
         setupRecyclerView();
+        setupSearchShortcut();
         setupCategoryFilter();
         loadItems();
         
@@ -59,6 +62,7 @@ public class FeedFragment extends Fragment {
     private void initViews(View view) {
         recyclerView = view.findViewById(R.id.items_recycler_view);
         categoryChipGroup = view.findViewById(R.id.category_chip_group);
+        searchPill = view.findViewById(R.id.search_pill);
         progressBar = view.findViewById(R.id.progress_bar);
         emptyText = view.findViewById(R.id.empty_text);
     }
@@ -72,8 +76,22 @@ public class FeedFragment extends Fragment {
             startActivity(intent);
         });
         
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        int spanCount = getResources().getConfiguration().screenWidthDp >= 600 ? 3 : 2;
+        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), spanCount));
         recyclerView.setAdapter(adapter);
+    }
+
+    private void setupSearchShortcut() {
+        searchPill.setOnClickListener(v -> {
+            if (getActivity() == null) {
+                return;
+            }
+
+            BottomNavigationView bottomNavigation = getActivity().findViewById(R.id.bottom_navigation);
+            if (bottomNavigation != null) {
+                bottomNavigation.setSelectedItemId(R.id.nav_search);
+            }
+        });
     }
 
     private void setupCategoryFilter() {

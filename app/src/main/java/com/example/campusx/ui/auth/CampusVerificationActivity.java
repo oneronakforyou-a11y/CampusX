@@ -1,42 +1,50 @@
 package com.example.campusx.ui.auth;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.example.campusx.R;
 import com.example.campusx.data.FirebaseRepository;
 import com.example.campusx.model.User;
+import com.example.campusx.ui.SystemBarsHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.auth.ActionCodeSettings;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.Locale;
 
 public class CampusVerificationActivity extends AppCompatActivity {
     private static final String TAG = "CampusVerification";
-    private static final String BMU_DOMAIN = "@bmu.edu.in";
-    private static final String PREFS_NAME = "CampusXAuth";
-    private static final String KEY_PENDING_EMAIL = "pending_email";
-    
-    private TextInputEditText emailInput;
+    private static final int MIN_PASSWORD_LENGTH = 6;
+
+    private TextView titleText;
+    private TextView subtitleText;
     private TextView errorText;
-    private MaterialButton getCodeButton;
+    private TextView toggleAuthMode;
+    private TextView signInTab;
+    private TextView signUpTab;
+    private TextInputEditText emailInput;
+    private TextInputEditText passwordInput;
+    private MaterialButton authButton;
     private ProgressBar progressBar;
     private FirebaseRepository firebaseRepo;
+    private boolean signUpMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_campus_verification);
+        SystemBarsHelper.applySystemBarPadding(findViewById(R.id.campus_verification_root));
 
-        // Hide action bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
@@ -44,163 +52,179 @@ public class CampusVerificationActivity extends AppCompatActivity {
         firebaseRepo = FirebaseRepository.getInstance();
         initViews();
         setupListeners();
-        
-        // Check if coming back from email link
-        checkEmailLink();
+        updateAuthMode();
     }
 
     private void initViews() {
+        titleText = findViewById(R.id.title);
+        subtitleText = findViewById(R.id.subtitle);
         emailInput = findViewById(R.id.email_input);
+        passwordInput = findViewById(R.id.password_input);
         errorText = findViewById(R.id.error_text);
-        getCodeButton = findViewById(R.id.get_code_button);
+        authButton = findViewById(R.id.get_code_button);
         progressBar = findViewById(R.id.progress_bar);
+        toggleAuthMode = findViewById(R.id.toggle_auth_mode);
+        signInTab = findViewById(R.id.sign_in_tab);
+        signUpTab = findViewById(R.id.sign_up_tab);
     }
 
     private void setupListeners() {
-        getCodeButton.setOnClickListener(v -> validateAndSendCode());
+        authButton.setOnClickListener(v -> validateAndAuthenticate());
+        toggleAuthMode.setOnClickListener(v -> setSignUpMode(!signUpMode));
+        signInTab.setOnClickListener(v -> setSignUpMode(false));
+        signUpTab.setOnClickListener(v -> setSignUpMode(true));
     }
 
-    private void checkEmailLink() {
-        Intent intent = getIntent();
-        String emailLink = intent.getData() != null ? intent.getData().toString() : null;
-        
-        if (emailLink != null && firebaseRepo.isSignInWithEmailLink(emailLink)) {
-            Log.d(TAG, "Email link detected: " + emailLink);
-            
-            // Get the email from SharedPreferences
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            String email = prefs.getString(KEY_PENDING_EMAIL, null);
-            
-            if (email != null) {
-                showLoading(true);
-                signInWithEmailLink(email, emailLink);
-            } else {
-                // Email not found, ask user to enter it
-                Toast.makeText(this, "Please enter your email to complete sign in", Toast.LENGTH_LONG).show();
-            }
-        }
+    private void setSignUpMode(boolean signUpMode) {
+        this.signUpMode = signUpMode;
+        hideError();
+        updateAuthMode();
     }
 
-    private void validateAndSendCode() {
-        String email = emailInput.getText().toString().trim();
+    private void updateAuthMode() {
+        titleText.setText(signUpMode ? R.string.create_account : R.string.sign_in);
+        subtitleText.setText(signUpMode ? R.string.signup_subtitle : R.string.signin_subtitle);
+        authButton.setText(signUpMode ? R.string.create_account : R.string.sign_in);
+        toggleAuthMode.setText(signUpMode ? R.string.switch_to_signin : R.string.switch_to_signup);
+        updateSegmentTab(signInTab, !signUpMode);
+        updateSegmentTab(signUpTab, signUpMode);
+    }
 
-        // Validate email
+    private void updateSegmentTab(TextView tab, boolean selected) {
+        tab.setBackgroundResource(selected ? R.drawable.bg_auth_segment_selected : R.drawable.bg_auth_segment_unselected);
+        tab.setTextColor(ContextCompat.getColor(this, selected ? R.color.white : R.color.text_secondary));
+    }
+
+    private void validateAndAuthenticate() {
+        String email = getInputText(emailInput).toLowerCase(Locale.ROOT);
+        String password = getInputText(passwordInput);
+
         if (TextUtils.isEmpty(email)) {
-            showError("Please enter your email address");
+            showError(getString(R.string.error_email_required));
             return;
         }
 
-        if (!email.endsWith(BMU_DOMAIN)) {
-            showError("Please use your BMU campus email (" + BMU_DOMAIN + ")");
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showError(getString(R.string.error_email_invalid));
             return;
         }
 
-        // Hide error and show loading
+        if (TextUtils.isEmpty(password)) {
+            showError(getString(R.string.error_password_required));
+            return;
+        }
+
+        if (password.length() < MIN_PASSWORD_LENGTH) {
+            showError(getString(R.string.error_password_short));
+            return;
+        }
+
         hideError();
         showLoading(true);
 
-        // Send Firebase Email Link
-        sendSignInLinkToEmail(email);
+        if (signUpMode) {
+            signUp(email, password);
+        } else {
+            signIn(email, password);
+        }
     }
 
-    private void sendSignInLinkToEmail(String email) {
-        // Configure action code settings
-        ActionCodeSettings actionCodeSettings = ActionCodeSettings.newBuilder()
-                .setUrl("https://campusx.page.link/verify") // Your dynamic link domain
-                .setHandleCodeInApp(true)
-                .setAndroidPackageName(
-                        getPackageName(),
-                        true, // Install if not available
-                        null  // Minimum version
-                )
-                .build();
+    private String getInputText(TextInputEditText input) {
+        return input.getText() == null ? "" : input.getText().toString().trim();
+    }
 
-        firebaseRepo.sendSignInLinkToEmail(email, actionCodeSettings)
-                .addOnSuccessListener(aVoid -> {
-                    showLoading(false);
-                    
-                    // Save email for later use
-                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-                    prefs.edit().putString(KEY_PENDING_EMAIL, email).apply();
-                    
-                    Log.d(TAG, "Verification email sent to: " + email);
-                    Toast.makeText(this, "Verification email sent! Check your inbox.", Toast.LENGTH_LONG).show();
-                    
-                    // Navigate to OTP screen to show instructions
-                    navigateToOtpVerification(email);
+    private void signUp(String email, String password) {
+        firebaseRepo.createUserWithEmail(email, password)
+                .addOnSuccessListener(authResult -> {
+                    FirebaseUser firebaseUser = authResult.getUser();
+                    if (firebaseUser == null) {
+                        showLoading(false);
+                        showError(getString(R.string.error_auth_failed));
+                        return;
+                    }
+                    createUserProfile(firebaseUser.getUid(), email);
                 })
                 .addOnFailureListener(e -> {
+                    Log.e(TAG, "Sign up failed", e);
                     showLoading(false);
-                    Log.e(TAG, "Error sending verification email", e);
-                    showError("Failed to send verification email. Please try again.");
+                    showError(getString(R.string.error_signup_failed, cleanError(e)));
                 });
     }
 
-    private void signInWithEmailLink(String email, String emailLink) {
-        firebaseRepo.signInWithEmailLink(email, emailLink)
+    private void signIn(String email, String password) {
+        firebaseRepo.signInWithEmail(email, password)
                 .addOnSuccessListener(authResult -> {
-                    Log.d(TAG, "Sign in successful: " + authResult.getUser().getUid());
-                    
-                    // Clear pending email
-                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-                    prefs.edit().remove(KEY_PENDING_EMAIL).apply();
-                    
-                    // Create user profile in Firestore
-                    createUserProfile(authResult.getUser().getUid(), email);
+                    FirebaseUser firebaseUser = authResult.getUser();
+                    if (firebaseUser == null) {
+                        showLoading(false);
+                        showError(getString(R.string.error_auth_failed));
+                        return;
+                    }
+                    ensureUserProfile(firebaseUser.getUid(), email);
                 })
                 .addOnFailureListener(e -> {
+                    Log.e(TAG, "Sign in failed", e);
                     showLoading(false);
-                    Log.e(TAG, "Error signing in with email link", e);
-                    showError("Failed to verify email. Please try again.");
+                    showError(getString(R.string.error_signin_failed, cleanError(e)));
+                });
+    }
+
+    private void ensureUserProfile(String userId, String email) {
+        firebaseRepo.getUser(userId)
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        showLoading(false);
+                        navigateToMain();
+                    } else {
+                        createUserProfile(userId, email);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Could not read user profile, creating it", e);
+                    createUserProfile(userId, email);
                 });
     }
 
     private void createUserProfile(String userId, String email) {
-        // Check if user profile already exists
-        firebaseRepo.getUser(userId)
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        // User already exists, just navigate to main
-                        Log.d(TAG, "User profile already exists");
-                        showLoading(false);
-                        navigateToMain();
-                    } else {
-                        // Create new user profile
-                        User user = new User(
-                                userId,
-                                email,
-                                email.substring(0, email.indexOf("@")), // Use email prefix as name
-                                null,
-                                "BMU Student",
-                                0.0,
-                                0,
-                                0,
-                                0,
-                                false, // isAdmin
-                                System.currentTimeMillis(),
-                                System.currentTimeMillis()
-                        );
-                        
-                        firebaseRepo.createUser(user)
-                                .addOnSuccessListener(v -> {
-                                    Log.d(TAG, "User profile created successfully");
-                                    showLoading(false);
-                                    Toast.makeText(this, "Welcome to CampusX!", Toast.LENGTH_SHORT).show();
-                                    navigateToMain();
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e(TAG, "Error creating user profile", e);
-                                    showLoading(false);
-                                    // Still navigate even if profile creation fails
-                                    navigateToMain();
-                                });
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error checking user profile", e);
+        long now = System.currentTimeMillis();
+        User user = new User(
+                userId,
+                email,
+                getDefaultName(email),
+                null,
+                getString(R.string.default_user_bio),
+                0.0,
+                0,
+                0,
+                0,
+                false,
+                now,
+                now
+        );
+
+        firebaseRepo.createUser(user)
+                .addOnSuccessListener(v -> {
+                    Log.d(TAG, "User profile created in Firestore: users/" + userId);
                     showLoading(false);
                     navigateToMain();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "User profile creation failed", e);
+                    showLoading(false);
+                    showError(getString(R.string.error_profile_create_failed, cleanError(e)));
                 });
+    }
+
+    private String getDefaultName(String email) {
+        int atIndex = email.indexOf("@");
+        if (atIndex <= 0) {
+            return getString(R.string.default_user_name);
+        }
+        return email.substring(0, atIndex);
+    }
+
+    private String cleanError(Exception e) {
+        return e.getMessage() == null ? getString(R.string.error_try_again) : e.getMessage();
     }
 
     private void showError(String message) {
@@ -213,22 +237,13 @@ public class CampusVerificationActivity extends AppCompatActivity {
     }
 
     private void showLoading(boolean show) {
-        if (show) {
-            getCodeButton.setVisibility(View.INVISIBLE);
-            progressBar.setVisibility(View.VISIBLE);
-            emailInput.setEnabled(false);
-        } else {
-            getCodeButton.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.GONE);
-            emailInput.setEnabled(true);
-        }
-    }
-
-    private void navigateToOtpVerification(String email) {
-        Intent intent = new Intent(this, OtpVerificationActivity.class);
-        intent.putExtra("email", email);
-        startActivity(intent);
-        // Don't finish() - allow user to come back if needed
+        authButton.setVisibility(show ? View.INVISIBLE : View.VISIBLE);
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        emailInput.setEnabled(!show);
+        passwordInput.setEnabled(!show);
+        toggleAuthMode.setEnabled(!show);
+        signInTab.setEnabled(!show);
+        signUpTab.setEnabled(!show);
     }
 
     private void navigateToMain() {

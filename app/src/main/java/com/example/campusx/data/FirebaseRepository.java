@@ -157,7 +157,6 @@ public class FirebaseRepository {
     public Task<QuerySnapshot> getAllItems() {
         return db.collection(ITEMS_COLLECTION)
                 .whereEqualTo("isAvailable", true)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get();
     }
     
@@ -165,14 +164,12 @@ public class FirebaseRepository {
         return db.collection(ITEMS_COLLECTION)
                 .whereEqualTo("category", category)
                 .whereEqualTo("isAvailable", true)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get();
     }
     
     public Task<QuerySnapshot> getItemsByOwner(String ownerId) {
         return db.collection(ITEMS_COLLECTION)
                 .whereEqualTo("ownerId", ownerId)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get();
     }
     
@@ -234,14 +231,12 @@ public class FirebaseRepository {
     public Task<QuerySnapshot> getBookingsByRenter(String renterId) {
         return db.collection(BOOKINGS_COLLECTION)
                 .whereEqualTo("renterId", renterId)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get();
     }
     
     public Task<QuerySnapshot> getBookingsByOwner(String ownerId) {
         return db.collection(BOOKINGS_COLLECTION)
                 .whereEqualTo("ownerId", ownerId)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get();
     }
     

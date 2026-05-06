@@ -8,6 +8,8 @@ import android.os.Looper;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.campusx.R;
+import com.example.campusx.data.FirebaseRepository;
+import com.example.campusx.ui.main.MainActivity;
 import com.example.campusx.ui.onboarding.OnboardingActivity;
 
 public class SplashActivity extends AppCompatActivity {
@@ -17,6 +19,7 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+        SystemBarsHelper.applySystemBarPadding(findViewById(R.id.splash_root));
 
         // Hide action bar
         if (getSupportActionBar() != null) {
@@ -25,7 +28,10 @@ public class SplashActivity extends AppCompatActivity {
 
         // Navigate to onboarding after delay
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            Intent intent = new Intent(SplashActivity.this, OnboardingActivity.class);
+            Class<?> nextScreen = FirebaseRepository.getInstance().getCurrentFirebaseUser() != null
+                    ? MainActivity.class
+                    : OnboardingActivity.class;
+            Intent intent = new Intent(SplashActivity.this, nextScreen);
             startActivity(intent);
             finish();
         }, SPLASH_DELAY);

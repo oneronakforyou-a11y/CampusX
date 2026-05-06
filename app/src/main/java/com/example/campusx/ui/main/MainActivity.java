@@ -10,7 +10,10 @@ import androidx.fragment.app.Fragment;
 import com.example.campusx.R;
 import com.example.campusx.data.DatabasePopulator;
 import com.example.campusx.data.FirebaseRepository;
+import com.example.campusx.ui.SystemBarsHelper;
 import com.example.campusx.ui.feed.FeedFragment;
+import com.example.campusx.ui.profile.ProfileFragment;
+import com.example.campusx.ui.search.SearchFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
         
         try {
             setContentView(R.layout.activity_main);
+            SystemBarsHelper.applySystemBarPadding(findViewById(R.id.main_root));
 
             // Hide action bar
             if (getSupportActionBar() != null) {
@@ -48,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Load default fragment
             if (savedInstanceState == null) {
-                loadFragment(new FeedFragment());
+                handleInitialDestination();
             }
         } catch (Exception e) {
             Log.e(TAG, "Error in onCreate: " + e.getMessage(), e);
@@ -78,13 +82,11 @@ public class MainActivity extends AppCompatActivity {
                 if (itemId == R.id.nav_feed) {
                     fragment = new FeedFragment();
                 } else if (itemId == R.id.nav_search) {
-                    fragment = PlaceholderFragment.newInstance("Search");
-                } else if (itemId == R.id.nav_list) {
-                    fragment = PlaceholderFragment.newInstance("Lister Hub");
+                    fragment = new SearchFragment();
                 } else if (itemId == R.id.nav_rentals) {
                     fragment = new com.example.campusx.ui.rentals.MyRentalsFragment();
                 } else if (itemId == R.id.nav_profile) {
-                    fragment = PlaceholderFragment.newInstance("Profile");
+                    fragment = new ProfileFragment();
                 }
 
                 return loadFragment(fragment);
@@ -94,6 +96,24 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
+
+    private void handleInitialDestination() {
+        String destination = getIntent().getStringExtra("navigate_to");
+        if ("rentals".equals(destination)) {
+            bottomNavigation.setSelectedItemId(R.id.nav_rentals);
+        } else {
+            loadFragment(new FeedFragment());
+        }
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (bottomNavigation != null) {
+            handleInitialDestination();
+        }
     }
 
     private boolean loadFragment(Fragment fragment) {
